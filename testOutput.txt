@@ -1,0 +1,17 @@
+JUnit version 4.13.2
+.E
+Time: 0.005
+There was 1 failure:
+1) testMergeRightEnd(TestListExamples)
+java.lang.NoClassDefFoundError: ListExamples
+	at TestListExamples.testMergeRightEnd(TestListExamples.java:17)
+	... 9 trimmed
+Caused by: java.lang.ClassNotFoundException: ListExamples
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:521)
+	... 11 more
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
