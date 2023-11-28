@@ -6,32 +6,53 @@ rm -rf grading-area
 mkdir grading-area
 
 git clone $1 student-submission
-echo 'Finished cloning'
 
-tests=`find ./student-submission -name "ListExamples.java"`
-
-echo $tests
-if [[ "$tests" ==  *"ListExamples.java" ]];
-then 
-    echo "The file was found"
-else 
-    echo "File not found"
+if [[ $? -ne 0 ]]; then
+    echo "Repo not found"
     exit 1
 fi
 
-cp $tests ./grading-area
-# cp GradeServer.java ./grading-area
-# cp Server.java ./grading-area
-cp TestListExamples.java ./grading-area
+echo -e "Finished cloning"
+if [[ ! -f student-submission/ListExamples.java ]]; then
+    echo -e "File not found"
+    exit 1
+fi
 
-javac -cp $CPATH ./grading-area/TestListExamples.java ./grading-area/ListExamples.java > output.txt
-echo `cat output.txt`
-java -cp $CPATH org.junit.runner.JUnitCore TestListExamples > testOutput.txt
-echo `cat testOutput.txt`
+echo -e "File ListExamples.java Found!"
 
+cp student-submission/ListExamples.java ./TestListExamples.java grading-area/
 
-# Draw a picture/take notes on the directory structure that's set up after
-# getting to this point
+grepOut=`cat grading-area/ListExamples.java | grep -E "class\s+ListExamples"`
+if [[ $grepOut == "" ]] ; then
+    echo -e "Wrong class name"
+    exit 1
+fi
 
-# Then, add here code to compile and run, and do any post-processing of the
-# tests
+echo -e "Correct class name!"
+
+javac -cp $CPATH grading-area/*.java 2> grading-area/javac-out
+if [[ $? -ne 0 ]]; then
+    echo -e "Compilation failed. Fix your shit before submitting :|\n"
+    echo " "
+    echo "`cat grading-area/javac-out`"
+    exit 1
+fi
+
+java -cp "$CPATH:grading-area" org.junit.runner.JUnitCore TestListExamples > grading-area/test-output
+
+# All tests pass
+okgrep=`cat grading-area/test-output | grep -E "OK"`
+if [[ $okgrep != "" ]]; then
+    numTests=`echo $okgrep | grep -Eo "\d+"`
+    echo -e "All tests passed ($numTests tests)"
+    echo -e "Score: 100%"
+    exit 0
+fi
+
+lastLine=`cat grading-area/test-output | grep "Tests run"`
+numTests=`echo $lastLine | grep -oE "Tests run: \d+" | grep -oE "\d+"`
+numFailures=`echo $lastLine | grep -oE "Failures: \d+" | grep -oE "\d+"`
+numSuccess=$(( numTests - numFailures ))
+score=`echo "scale=2; ($numSuccess*100) / $numTests" | bc`
+echo -e "Score: $score%"
+echo -e "Success: $numSuccess, Failure: $numFailures"
